@@ -26,7 +26,7 @@ import {
 
 const AppSidebar: React.FC = () => {
   return (
-    <Sidebar defaultCollapsed={false}>
+    <Sidebar>
       <SidebarHeader className="py-6">
         <div className="flex items-center px-4">
           <Eye className="h-8 w-8 mr-2 text-cyber-primary" />

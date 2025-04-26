@@ -32,7 +32,15 @@ const SecurityScoreCard: React.FC<SecurityScoreCardProps> = ({ score, className 
       <CardContent>
         <div className="flex flex-col items-center">
           <div className={cn("text-5xl font-bold mb-6", getScoreColor())}>{score}</div>
-          <Progress value={score} className="h-2 w-full mb-6" indicatorClassName={getProgressColor()} />
+          <div className="w-full">
+            <Progress 
+              value={score} 
+              className={cn("h-2 w-full mb-6")}
+              style={{ 
+                '--progress-background': getProgressColor() 
+              } as React.CSSProperties} 
+            />
+          </div>
           <div className="grid grid-cols-4 w-full text-xs text-center mt-2">
             <div className="text-red-500">Critical</div>
             <div className="text-orange-500">Warning</div>
