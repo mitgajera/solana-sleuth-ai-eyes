@@ -19,13 +19,25 @@ const ApiKeyInput: React.FC<ApiKeyInputProps> = ({ onApiKeySubmit, className }) 
 
   // Check for existing API key on component mount
   useEffect(() => {
-    const savedApiKey = apiKeyService.getApiKey();
-    if (savedApiKey) {
-      setApiKey(savedApiKey);
-      // Automatically submit if we have a saved key
-      onApiKeySubmit(savedApiKey);
-    }
-  }, [onApiKeySubmit]);
+    const checkExistingApiKey = async () => {
+      try {
+        const savedApiKey = await apiKeyService.getApiKey();
+        if (savedApiKey) {
+          setApiKey(savedApiKey);
+          onApiKeySubmit(savedApiKey);
+        }
+      } catch (error) {
+        console.error('Error fetching API key:', error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch existing API key",
+          variant: "destructive",
+        });
+      }
+    };
+
+    checkExistingApiKey();
+  }, [onApiKeySubmit, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,24 +54,18 @@ const ApiKeyInput: React.FC<ApiKeyInputProps> = ({ onApiKeySubmit, className }) 
     setIsLoading(true);
     
     try {
-      // In a real implementation, you would validate the API key with Messari here
-      // For now, we'll just simulate a verification delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Save the API key to storage
-      apiKeyService.saveApiKey(apiKey);
-      
-      // Call the callback to inform parent components
+      await apiKeyService.saveApiKey(apiKey);
       onApiKeySubmit(apiKey);
       
       toast({
         title: "Success",
-        description: "API key verified and saved successfully",
+        description: "API key saved successfully",
       });
     } catch (error) {
+      console.error('Error saving API key:', error);
       toast({
         title: "Error",
-        description: "Failed to verify API key. Please try again.",
+        description: "Failed to save API key. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -94,7 +100,7 @@ const ApiKeyInput: React.FC<ApiKeyInputProps> = ({ onApiKeySubmit, className }) 
             disabled={isLoading}
             className="w-full bg-cyber-primary hover:bg-cyber-primary/80 text-white"
           >
-            {isLoading ? "Verifying..." : "Connect to API"}
+            {isLoading ? "Saving..." : "Connect to API"}
           </Button>
         </form>
       </CardContent>

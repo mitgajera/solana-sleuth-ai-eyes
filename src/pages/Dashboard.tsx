@@ -13,19 +13,37 @@ import { apiKeyService } from "@/services/apiKeyService";
 
 const Dashboard: React.FC = () => {
   const [apiKeyEntered, setApiKeyEntered] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Check for existing API key on component mount
   useEffect(() => {
-    const hasApiKey = apiKeyService.hasApiKey();
-    if (hasApiKey) {
-      setApiKeyEntered(true);
-    }
+    const checkApiKey = async () => {
+      try {
+        const hasApiKey = await apiKeyService.hasApiKey();
+        setApiKeyEntered(hasApiKey);
+      } catch (error) {
+        console.error('Error checking API key:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkApiKey();
   }, []);
 
   const handleApiKeySubmit = (apiKey: string) => {
-    // The API key is now stored by the ApiKeyInput component
     setApiKeyEntered(true);
   };
+
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[80vh]">
+          <p>Loading...</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   if (!apiKeyEntered) {
     return (

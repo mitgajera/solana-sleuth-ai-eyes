@@ -1,39 +1,55 @@
 
-/**
- * API Key Service
- * 
- * This service handles storing and retrieving the Messari API key from local storage
- * In a production environment, you would want to store this server-side in a database
- */
-
-const API_KEY_STORAGE_KEY = 'MESSARI_API_KEY';
+import { supabase } from "@/integrations/supabase/client";
 
 export const apiKeyService = {
   /**
-   * Store API key in local storage
+   * Store API key in database
    */
-  saveApiKey: (apiKey: string): void => {
-    localStorage.setItem(API_KEY_STORAGE_KEY, apiKey);
+  saveApiKey: async (apiKey: string): Promise<void> => {
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) throw new Error('User must be logged in to save API key');
+
+    const { error } = await supabase
+      .from('api_keys')
+      .upsert({
+        user_id: user.id,
+        key_name: 'messari',
+        api_key: apiKey,
+      });
+
+    if (error) throw error;
   },
 
   /**
-   * Retrieve API key from local storage
+   * Retrieve API key from database
    */
-  getApiKey: (): string | null => {
-    return localStorage.getItem(API_KEY_STORAGE_KEY);
+  getApiKey: async (): Promise<string | null> => {
+    const { data, error } = await supabase
+      .from('api_keys')
+      .select('api_key')
+      .maybeSingle();
+
+    if (error) throw error;
+    return data?.api_key ?? null;
   },
 
   /**
-   * Check if API key exists in local storage
+   * Check if API key exists in database
    */
-  hasApiKey: (): boolean => {
-    return !!localStorage.getItem(API_KEY_STORAGE_KEY);
+  hasApiKey: async (): Promise<boolean> => {
+    const apiKey = await apiKeyService.getApiKey();
+    return !!apiKey;
   },
 
   /**
-   * Clear API key from local storage
+   * Clear API key from database
    */
-  clearApiKey: (): void => {
-    localStorage.removeItem(API_KEY_STORAGE_KEY);
+  clearApiKey: async (): Promise<void> => {
+    const { error } = await supabase
+      .from('api_keys')
+      .delete()
+      .neq('api_key', '');
+      
+    if (error) throw error;
   }
 };
