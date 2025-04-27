@@ -1,10 +1,11 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { apiKeyService } from "@/services/apiKeyService";
 
 interface ApiKeyInputProps {
   onApiKeySubmit: (apiKey: string) => void;
@@ -16,7 +17,17 @@ const ApiKeyInput: React.FC<ApiKeyInputProps> = ({ onApiKeySubmit, className }) 
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Check for existing API key on component mount
+  useEffect(() => {
+    const savedApiKey = apiKeyService.getApiKey();
+    if (savedApiKey) {
+      setApiKey(savedApiKey);
+      // Automatically submit if we have a saved key
+      onApiKeySubmit(savedApiKey);
+    }
+  }, [onApiKeySubmit]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!apiKey.trim()) {
@@ -30,15 +41,30 @@ const ApiKeyInput: React.FC<ApiKeyInputProps> = ({ onApiKeySubmit, className }) 
 
     setIsLoading(true);
     
-    // Simulate API verification
-    setTimeout(() => {
+    try {
+      // In a real implementation, you would validate the API key with Messari here
+      // For now, we'll just simulate a verification delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Save the API key to storage
+      apiKeyService.saveApiKey(apiKey);
+      
+      // Call the callback to inform parent components
       onApiKeySubmit(apiKey);
+      
       toast({
         title: "Success",
-        description: "API key verified successfully",
+        description: "API key verified and saved successfully",
       });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to verify API key. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   return (

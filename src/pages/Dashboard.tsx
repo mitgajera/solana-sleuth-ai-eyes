@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Activity, ShieldAlert, Flag, Zap } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import StatCard from "@/components/dashboard/StatCard";
@@ -9,12 +9,21 @@ import ThreatMap from "@/components/dashboard/ThreatMap";
 import NewsFeed from "@/components/dashboard/NewsFeed";
 import ApiKeyInput from "@/components/dashboard/ApiKeyInput";
 import { mockActivities, mockNews, mockStats } from "@/services/mockData";
+import { apiKeyService } from "@/services/apiKeyService";
 
 const Dashboard: React.FC = () => {
   const [apiKeyEntered, setApiKeyEntered] = useState<boolean>(false);
+  
+  // Check for existing API key on component mount
+  useEffect(() => {
+    const hasApiKey = apiKeyService.hasApiKey();
+    if (hasApiKey) {
+      setApiKeyEntered(true);
+    }
+  }, []);
 
   const handleApiKeySubmit = (apiKey: string) => {
-    // In a real app, we would validate and store the API key
+    // The API key is now stored by the ApiKeyInput component
     setApiKeyEntered(true);
   };
 

@@ -1,5 +1,6 @@
 
 import React from "react";
+import { Link, useLocation } from "react-router-dom";
 import { 
   Activity, 
   AlertTriangle, 
@@ -25,6 +26,12 @@ import {
 } from "@/components/ui/sidebar";
 
 const AppSidebar: React.FC = () => {
+  const location = useLocation();
+
+  const isActive = (path: string) => {
+    return location.pathname === path;
+  };
+
   return (
     <Sidebar>
       <SidebarHeader className="py-6">
@@ -44,27 +51,35 @@ const AppSidebar: React.FC = () => {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton className="w-full">
-                  <Home className="h-5 w-5 mr-3" />
-                  <span>Dashboard</span>
+                <SidebarMenuButton className="w-full" asChild isActive={isActive("/")}>
+                  <Link to="/">
+                    <Home className="h-5 w-5 mr-3" />
+                    <span>Dashboard</span>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton className="w-full">
-                  <Activity className="h-5 w-5 mr-3" />
-                  <span>Activity</span>
+                <SidebarMenuButton className="w-full" asChild isActive={isActive("/activity")}>
+                  <Link to="/activity">
+                    <Activity className="h-5 w-5 mr-3" />
+                    <span>Activity</span>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton className="w-full">
-                  <BarChart2 className="h-5 w-5 mr-3" />
-                  <span>Metrics</span>
+                <SidebarMenuButton className="w-full" asChild isActive={isActive("/metrics")}>
+                  <Link to="/metrics">
+                    <BarChart2 className="h-5 w-5 mr-3" />
+                    <span>Metrics</span>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton className="w-full">
-                  <Database className="h-5 w-5 mr-3" />
-                  <span>Data Sources</span>
+                <SidebarMenuButton className="w-full" asChild isActive={isActive("/data-sources")}>
+                  <Link to="/data-sources">
+                    <Database className="h-5 w-5 mr-3" />
+                    <span>Data Sources</span>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -76,21 +91,27 @@ const AppSidebar: React.FC = () => {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton className="w-full">
-                  <AlertTriangle className="h-5 w-5 mr-3 text-cyber-warning" />
-                  <span>Alerts</span>
+                <SidebarMenuButton className="w-full" asChild isActive={isActive("/alerts")}>
+                  <Link to="/alerts">
+                    <AlertTriangle className="h-5 w-5 mr-3 text-cyber-warning" />
+                    <span>Alerts</span>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton className="w-full">
-                  <Shield className="h-5 w-5 mr-3 text-cyber-primary" />
-                  <span>Threats</span>
+                <SidebarMenuButton className="w-full" asChild isActive={isActive("/threats")}>
+                  <Link to="/threats">
+                    <Shield className="h-5 w-5 mr-3 text-cyber-primary" />
+                    <span>Threats</span>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton className="w-full">
-                  <Zap className="h-5 w-5 mr-3 text-cyber-accent" />
-                  <span>AI Analysis</span>
+                <SidebarMenuButton className="w-full" asChild isActive={isActive("/ai-analysis")}>
+                  <Link to="/ai-analysis">
+                    <Zap className="h-5 w-5 mr-3 text-cyber-accent" />
+                    <span>AI Analysis</span>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
