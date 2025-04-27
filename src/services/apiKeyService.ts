@@ -3,27 +3,19 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const apiKeyService = {
   /**
-   * Store API key in database or localStorage if not authenticated
+   * Store API key in database
    */
   saveApiKey: async (apiKey: string): Promise<void> => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
-        // User is authenticated, store in database
-        const { error } = await supabase
-          .from('api_keys')
-          .upsert({
-            user_id: user.id,
-            key_name: 'messari',
-            api_key: apiKey,
-          });
+      const { error } = await supabase
+        .from('api_keys')
+        .upsert({
+          key_name: 'messari',
+          api_key: apiKey,
+          user_id: '00000000-0000-0000-0000-000000000000' // Default user ID for non-authenticated storage
+        });
 
-        if (error) throw error;
-      } else {
-        // No authenticated user, store in localStorage
-        localStorage.setItem('messari_api_key', apiKey);
-      }
+      if (error) throw error;
     } catch (error) {
       console.error('Error saving API key:', error);
       throw new Error('Failed to save API key');
@@ -31,26 +23,18 @@ export const apiKeyService = {
   },
 
   /**
-   * Retrieve API key from database or localStorage
+   * Retrieve API key from database
    */
   getApiKey: async (): Promise<string | null> => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
-        // User is authenticated, get from database
-        const { data, error } = await supabase
-          .from('api_keys')
-          .select('api_key')
-          .eq('user_id', user.id)
-          .maybeSingle();
+      const { data, error } = await supabase
+        .from('api_keys')
+        .select('api_key')
+        .eq('key_name', 'messari')
+        .maybeSingle();
 
-        if (error) throw error;
-        return data?.api_key ?? null;
-      } else {
-        // No authenticated user, get from localStorage
-        return localStorage.getItem('messari_api_key');
-      }
+      if (error) throw error;
+      return data?.api_key ?? null;
     } catch (error) {
       console.error('Error retrieving API key:', error);
       return null;
@@ -58,7 +42,7 @@ export const apiKeyService = {
   },
 
   /**
-   * Check if API key exists in database or localStorage
+   * Check if API key exists in database
    */
   hasApiKey: async (): Promise<boolean> => {
     try {
@@ -71,27 +55,20 @@ export const apiKeyService = {
   },
 
   /**
-   * Clear API key from database or localStorage
+   * Clear API key from database
    */
   clearApiKey: async (): Promise<void> => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (user) {
-        // User is authenticated, delete from database
-        const { error } = await supabase
-          .from('api_keys')
-          .delete()
-          .eq('user_id', user.id);
-          
-        if (error) throw error;
-      } else {
-        // No authenticated user, remove from localStorage
-        localStorage.removeItem('messari_api_key');
-      }
+      const { error } = await supabase
+        .from('api_keys')
+        .delete()
+        .eq('key_name', 'messari');
+        
+      if (error) throw error;
     } catch (error) {
       console.error('Error clearing API key:', error);
       throw new Error('Failed to clear API key');
     }
   }
 };
+
