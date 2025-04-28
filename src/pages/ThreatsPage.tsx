@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -102,7 +101,7 @@ const ThreatsPage: React.FC = () => {
       severity: 'high',
       discoveredAt: '1 week ago',
       affectedUsers: 0,
-      description: 'Flash loan attack attempted against a major protocol's governance system to pass malicious proposals.',
+      description: "Flash loan attack attempted against a major protocol's governance system to pass malicious proposals.",
       mitigation: 'Governance timelock added. Flash loan protection implemented. Security audit completed.',
       targets: ['DAO governance', 'DeFi protocols'],
       mitigationProgress: 100
