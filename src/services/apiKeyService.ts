@@ -3,38 +3,26 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const apiKeyService = {
   /**
-   * Store API key in database
+   * Store API key in Supabase secrets (handled by admin)
+   * This function is kept for backward compatibility but doesn't store anything
    */
   saveApiKey: async (apiKey: string): Promise<void> => {
-    try {
-      const { error } = await supabase
-        .from('api_keys')
-        .upsert({
-          key_name: 'messari',
-          api_key: apiKey,
-          user_id: '00000000-0000-0000-0000-000000000000' // Default user ID for non-authenticated storage
-        });
-
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error saving API key:', error);
-      throw new Error('Failed to save API key');
-    }
+    // API key should be configured through Supabase secrets
+    console.log("Note: API key is now stored in Supabase secrets");
+    return Promise.resolve();
   },
 
   /**
-   * Retrieve API key from database
+   * Retrieve API key from Supabase edge function
    */
   getApiKey: async (): Promise<string | null> => {
     try {
-      const { data, error } = await supabase
-        .from('api_keys')
-        .select('api_key')
-        .eq('key_name', 'messari')
-        .maybeSingle();
+      const { data, error } = await supabase.functions.invoke('get-api-key', {
+        method: 'GET'
+      });
 
       if (error) throw error;
-      return data?.api_key ?? null;
+      return data?.apiKey ?? null;
     } catch (error) {
       console.error('Error retrieving API key:', error);
       return null;
@@ -42,7 +30,7 @@ export const apiKeyService = {
   },
 
   /**
-   * Check if API key exists in database
+   * Check if API key exists and is accessible
    */
   hasApiKey: async (): Promise<boolean> => {
     try {
@@ -55,20 +43,11 @@ export const apiKeyService = {
   },
 
   /**
-   * Clear API key from database
+   * Clear API key (this is a no-op now as keys are managed via Supabase secrets)
    */
   clearApiKey: async (): Promise<void> => {
-    try {
-      const { error } = await supabase
-        .from('api_keys')
-        .delete()
-        .eq('key_name', 'messari');
-        
-      if (error) throw error;
-    } catch (error) {
-      console.error('Error clearing API key:', error);
-      throw new Error('Failed to clear API key');
-    }
+    // API key management is now handled through Supabase secrets
+    console.log("Note: API key management is now handled through Supabase secrets");
+    return Promise.resolve();
   }
 };
-
