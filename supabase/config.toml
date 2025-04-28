@@ -2,3 +2,5 @@
 project_id = "kpafmbvijbfdvhsbffah"
 
 [functions.get-api-key]
+
+[functions.get-solana-data]

@@ -1,8 +1,9 @@
 
 import React from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import SolanaTransactions from "@/components/dashboard/SolanaTransactions";
 
-const ActivityPage: React.FC = () => {
+const ActivityPage = () => {
   return (
     <DashboardLayout>
       <div className="mb-6">
@@ -10,11 +11,8 @@ const ActivityPage: React.FC = () => {
         <p className="text-muted-foreground">Monitor transaction activity on the Solana blockchain</p>
       </div>
       
-      <div className="grid gap-6">
-        <div className="bg-card border border-border p-6 rounded-lg">
-          <h2 className="text-xl font-bold mb-4">Recent Transaction Activity</h2>
-          <p className="text-muted-foreground">This feature will display real-time transaction data from the Messari API.</p>
-        </div>
+      <div className="grid grid-cols-1 gap-6">
+        <SolanaTransactions />
       </div>
     </DashboardLayout>
   );

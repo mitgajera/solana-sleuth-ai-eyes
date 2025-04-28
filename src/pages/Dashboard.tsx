@@ -3,11 +3,12 @@ import React, { useState, useEffect } from "react";
 import { Activity, ShieldAlert, Flag, Zap } from "lucide-react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import StatCard from "@/components/dashboard/StatCard";
-import ActivityList from "@/components/dashboard/ActivityList";
+import SolanaTransactions from "@/components/dashboard/SolanaTransactions";
 import SecurityScoreCard from "@/components/dashboard/SecurityScoreCard";
 import ThreatMap from "@/components/dashboard/ThreatMap";
-import NewsFeed from "@/components/dashboard/NewsFeed";
+import RealTimeNewsFeed from "@/components/dashboard/RealTimeNewsFeed";
 import ApiKeyInput from "@/components/dashboard/ApiKeyInput";
+import SolanaMetricsCard from "@/components/dashboard/SolanaMetricsCard";
 import { mockActivities, mockNews, mockStats } from "@/services/mockData";
 import { apiKeyService } from "@/services/apiKeyService";
 
@@ -90,15 +91,19 @@ const Dashboard: React.FC = () => {
           trend={mockStats.securityIncidents.trend}
         />
       </div>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <SolanaMetricsCard className="lg:col-span-1" />
+        <ThreatMap className="lg:col-span-2" />
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <ThreatMap className="lg:col-span-2" />
+        <SolanaTransactions className="lg:col-span-2" />
         <SecurityScoreCard score={72} />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ActivityList items={mockActivities} />
-        <NewsFeed items={mockNews} />
+      <div className="grid grid-cols-1 lg:grid-cols-1 gap-6">
+        <RealTimeNewsFeed />
       </div>
     </DashboardLayout>
   );
