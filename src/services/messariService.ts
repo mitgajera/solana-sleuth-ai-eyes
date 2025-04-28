@@ -33,7 +33,7 @@ export const messariService = {
     try {
       const { data, error } = await supabase.functions.invoke('get-solana-data', {
         method: 'GET',
-        query: { type: 'transactions' }
+        headers: { type: 'transactions' }
       });
 
       if (error) {
@@ -55,7 +55,7 @@ export const messariService = {
     try {
       const { data, error } = await supabase.functions.invoke('get-solana-data', {
         method: 'GET',
-        query: { type: 'news' }
+        headers: { type: 'news' }
       });
 
       if (error) {
@@ -77,7 +77,7 @@ export const messariService = {
     try {
       const { data, error } = await supabase.functions.invoke('get-solana-data', {
         method: 'GET',
-        query: { type: 'assets' }
+        headers: { type: 'assets' }
       });
 
       if (error) {

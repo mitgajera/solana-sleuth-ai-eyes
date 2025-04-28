@@ -1,7 +1,7 @@
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, type',
 }
 
 Deno.serve(async (req) => {
@@ -24,9 +24,8 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Parse request to get the data type
-    const url = new URL(req.url)
-    const dataType = url.searchParams.get('type') || 'transactions'
+    // Get the data type from headers
+    const dataType = req.headers.get('type') || 'transactions'
     
     let endpoint = ''
     
