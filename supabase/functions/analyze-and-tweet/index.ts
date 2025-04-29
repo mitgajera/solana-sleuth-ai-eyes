@@ -62,6 +62,12 @@ function generateOAuthHeader(method: string, url: string): string {
 }
 
 async function postTweet(content: string) {
+  // Skip Twitter posting if API keys aren't configured
+  if (!API_KEY || !API_SECRET || !ACCESS_TOKEN || !ACCESS_TOKEN_SECRET) {
+    console.log("Twitter API keys not configured, skipping tweet");
+    return { text: content, id: "mock-id" };
+  }
+
   const url = "https://api.twitter.com/2/tweets";
   const method = "POST";
   
@@ -89,13 +95,14 @@ async function analyzeSolanaData() {
     "https://data.messari.io/api/v1/assets/sol/metrics"
   ];
 
+  const headers: HeadersInit = {};
+  if (MESSARI_API_KEY) {
+    headers["x-messari-api-key"] = MESSARI_API_KEY;
+  }
+
   const responses = await Promise.all(
     endpoints.map(endpoint =>
-      fetch(endpoint, {
-        headers: {
-          "x-messari-api-key": MESSARI_API_KEY!
-        }
-      })
+      fetch(endpoint, { headers })
     )
   );
 
@@ -107,14 +114,18 @@ async function analyzeSolanaData() {
   const securityInsights = [];
 
   // Check for unusual price movements
-  const priceChange24h = marketData.data?.market_data?.percent_change_24h;
+  const priceChange24h = marketData.data?.market_data?.percent_change_24h || 0;
   if (Math.abs(priceChange24h) > 10) {
-    securityInsights.push(`🚨 Significant price movement detected: ${priceChange24h.toFixed(2)}% in 24h`);
+    securityInsights.push({
+      type: "Unusual Price Movement",
+      description: `Significant price movement detected: ${priceChange24h.toFixed(2)}% in 24h. Large price swings can indicate market manipulation or liquidity issues.`,
+      severity: Math.abs(priceChange24h) > 20 ? "high" : "medium"
+    });
   }
 
   // Analyze news for security-related content
   const securityNews = news.data?.filter((item: any) => {
-    const text = (item.title + " " + item.content).toLowerCase();
+    const text = ((item.title || "") + " " + (item.content || "")).toLowerCase();
     return text.includes("hack") || 
            text.includes("security") || 
            text.includes("vulnerability") ||
@@ -122,43 +133,49 @@ async function analyzeSolanaData() {
   }) || [];
 
   if (securityNews.length > 0) {
-    securityInsights.push(`📰 ${securityNews.length} security-related news items in the last 24h`);
+    securityInsights.push({
+      type: "Security News Detected",
+      description: `${securityNews.length} security-related news items in the last 24h. Monitor these developments closely.`,
+      severity: securityNews.length > 3 ? "high" : "medium"
+    });
   }
 
-  // Generate tweet thread
-  const tweetThread = [
-    "🔒 Solana Security Insights\n\n" +
-    `Current Status:\n` +
-    `Price: $${marketData.data?.market_data?.price_usd.toFixed(2)}\n` +
-    `24h Change: ${priceChange24h.toFixed(2)}%\n\n` +
-    `${securityInsights.join("\n")}`,
-  ];
-
-  // Add security news summary if any
-  if (securityNews.length > 0) {
-    tweetThread.push(
-      "🔍 Recent Security Events:\n\n" +
-      securityNews.slice(0, 3).map((news: any) => 
-        `• ${news.title}`
-      ).join("\n")
-    );
+  // Check for unusual transaction volume
+  const txVolume = metrics.data?.transaction_volume?.volume_last_24_hours;
+  const avgVolume = metrics.data?.transaction_volume?.volume_last_24_hours_overstatement_multiple;
+  
+  if (txVolume && avgVolume && txVolume > avgVolume * 1.5) {
+    securityInsights.push({
+      type: "High Transaction Volume",
+      description: `Transaction volume is significantly above average. This could indicate increased on-chain activity or potential security events.`,
+      severity: "medium"
+    });
   }
 
-  // Post tweet thread
-  const tweets = [];
-  for (const tweet of tweetThread) {
-    const result = await postTweet(tweet);
-    tweets.push(result);
+  // Check for market concentration/whale activity
+  const supply = metrics.data?.supply;
+  if (supply && supply.circulating_supply && supply.supply_distribution && supply.supply_distribution.top_10_accounts > 0.5) {
+    securityInsights.push({
+      type: "High Concentration Risk",
+      description: `More than 50% of supply is concentrated in top 10 accounts. This centralization poses governance and market risks.`,
+      severity: "critical"
+    });
+  }
+
+  // If no insights were found, add a baseline security status
+  if (securityInsights.length === 0) {
+    securityInsights.push({
+      type: "Normal Security Status",
+      description: "No significant security issues detected at this time.",
+      severity: "low"
+    });
   }
 
   return {
     insights: securityInsights,
-    tweets,
-    data: {
-      marketData: marketData.data,
-      securityNews,
-      metrics: metrics.data
-    }
+    marketData: marketData.data,
+    securityNews,
+    metrics: metrics.data
   };
 }
 
@@ -168,26 +185,40 @@ Deno.serve(async (req) => {
   }
 
   try {
-    if (!API_KEY || !API_SECRET || !ACCESS_TOKEN || !ACCESS_TOKEN_SECRET) {
-      throw new Error("Twitter credentials not configured");
-    }
-
-    if (!MESSARI_API_KEY) {
-      throw new Error("Messari API key not configured");
-    }
-
+    const requestData = await req.json().catch(() => ({}));
+    const skipTweet = requestData.skipTweet === true;
+    
     const analysis = await analyzeSolanaData();
     
+    // Post tweets if not skipped and Twitter is configured
+    const tweets = [];
+    if (!skipTweet && API_KEY && API_SECRET && ACCESS_TOKEN && ACCESS_TOKEN_SECRET) {
+      // Generate tweet thread content
+      const tweetContent = "🔒 Solana Security Insights\n\n" +
+        `Current Status:\n` +
+        `${analysis.insights.map((insight: any) => 
+          `• ${insight.type}: ${insight.severity.toUpperCase()}`
+        ).join("\n")}`;
+
+      try {
+        const tweetResult = await postTweet(tweetContent);
+        tweets.push(tweetResult);
+      } catch (error) {
+        console.error("Failed to post tweet:", error);
+      }
+    }
+    
     return new Response(
-      JSON.stringify(analysis),
+      JSON.stringify({ ...analysis, tweets }),
       { 
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200
       }
     );
-  } catch (error) {
+  } catch (error: any) {
+    console.error("Error in analyze-and-tweet function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error.message || "Unknown error occurred" }),
       { 
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500

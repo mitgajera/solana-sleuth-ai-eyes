@@ -1,11 +1,12 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowUp, ArrowDown, DollarSign, BarChart3 } from "lucide-react";
+import { ArrowUp, ArrowDown, DollarSign, BarChart3, RefreshCw } from "lucide-react";
 import { messariService } from "@/services/messariService";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 
 interface SolanaMetricsCardProps {
   className?: string;
@@ -17,7 +18,7 @@ const SolanaMetricsCard: React.FC<SolanaMetricsCardProps> = ({ className }) => {
   const [lastUpdate, setLastUpdate] = useState(Date.now());
   const { toast } = useToast();
 
-  const fetchSolanaData = async () => {
+  const fetchSolanaData = useCallback(async () => {
     try {
       setIsLoading(true);
       const data = await messariService.getSolanaAssetData();
@@ -34,7 +35,7 @@ const SolanaMetricsCard: React.FC<SolanaMetricsCardProps> = ({ className }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
     // Initial fetch
@@ -44,7 +45,7 @@ const SolanaMetricsCard: React.FC<SolanaMetricsCardProps> = ({ className }) => {
     const interval = setInterval(fetchSolanaData, 60 * 1000);
     
     return () => clearInterval(interval);
-  }, [toast]);
+  }, [fetchSolanaData]);
 
   const formatCurrency = (value: number): string => {
     if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
@@ -60,12 +61,31 @@ const SolanaMetricsCard: React.FC<SolanaMetricsCardProps> = ({ className }) => {
     return value.toFixed(0);
   };
 
+  // Function to calculate time since last update
+  const getTimeSinceUpdate = () => {
+    const seconds = Math.floor((Date.now() - lastUpdate) / 1000);
+    if (seconds < 60) return `${seconds}s ago`;
+    return `${Math.floor(seconds / 60)}m ${seconds % 60}s ago`;
+  };
+
   return (
     <Card className={cn("cyber-card h-full border-opacity-20", className)}>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg font-medium">Solana Metrics</CardTitle>
-        <div className="text-xs text-muted-foreground">
-          Updated {Math.floor((Date.now() - lastUpdate) / 1000)}s ago
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">
+            Updated {getTimeSinceUpdate()}
+          </span>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={fetchSolanaData}
+            disabled={isLoading}
+            className="h-8 w-8 p-0"
+          >
+            <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
+            <span className="sr-only">Refresh</span>
+          </Button>
         </div>
       </CardHeader>
       <CardContent>
@@ -110,6 +130,7 @@ const SolanaMetricsCard: React.FC<SolanaMetricsCardProps> = ({ className }) => {
               <p className="text-2xl font-bold">
                 {formatCurrency(solanaData.marketData.volume_last_24_hours)}
               </p>
+              <div className="h-4"></div>
             </div>
             
             <div className="space-y-1">
@@ -123,6 +144,7 @@ const SolanaMetricsCard: React.FC<SolanaMetricsCardProps> = ({ className }) => {
               <p className="text-2xl font-bold">
                 {formatCurrency(solanaData.marketCap || 0)}
               </p>
+              <div className="h-4"></div>
             </div>
             
             <div className="space-y-1">
@@ -138,11 +160,20 @@ const SolanaMetricsCard: React.FC<SolanaMetricsCardProps> = ({ className }) => {
               <p className="text-2xl font-bold">
                 {formatNumber(solanaData.activeAddresses || 246000)}
               </p>
+              <div className="h-4"></div>
             </div>
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center h-32">
             <p className="text-muted-foreground">No metrics data available</p>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={fetchSolanaData}
+              className="mt-2"
+            >
+              Try Again
+            </Button>
           </div>
         )}
       </CardContent>

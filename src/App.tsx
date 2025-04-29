@@ -15,30 +15,40 @@ import ThreatsPage from "./pages/ThreatsPage";
 import ThreatDetailPage from "./pages/ThreatDetailPage";
 import PhishingAdvisoryPage from "./pages/PhishingAdvisoryPage";
 import AIAnalysisPage from "./pages/AIAnalysisPage";
+import ErrorBoundary from "./components/ErrorBoundary";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/activity" element={<ActivityPage />} />
-          <Route path="/metrics" element={<MetricsPage />} />
-          <Route path="/data-sources" element={<DataSourcesPage />} />
-          <Route path="/alerts" element={<AlertsPage />} />
-          <Route path="/alerts/:alertId" element={<AlertDetailPage />} />
-          <Route path="/threats" element={<ThreatsPage />} />
-          <Route path="/threats/:threatId" element={<ThreatDetailPage />} />
-          <Route path="/threats/phishing-advisory" element={<PhishingAdvisoryPage />} />
-          <Route path="/ai-analysis" element={<AIAnalysisPage />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
+      <ErrorBoundary>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/activity" element={<ActivityPage />} />
+            <Route path="/metrics" element={<MetricsPage />} />
+            <Route path="/data-sources" element={<DataSourcesPage />} />
+            <Route path="/alerts" element={<AlertsPage />} />
+            <Route path="/alerts/:alertId" element={<AlertDetailPage />} />
+            <Route path="/threats" element={<ThreatsPage />} />
+            <Route path="/threats/:threatId" element={<ThreatDetailPage />} />
+            <Route path="/threats/phishing-advisory" element={<PhishingAdvisoryPage />} />
+            <Route path="/ai-analysis" element={<AIAnalysisPage />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </ErrorBoundary>
     </TooltipProvider>
   </QueryClientProvider>
 );

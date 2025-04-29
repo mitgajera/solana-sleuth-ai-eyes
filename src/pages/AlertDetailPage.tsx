@@ -5,9 +5,10 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Calendar, AlertTriangle, Shield } from "lucide-react";
+import { ArrowLeft, Calendar, AlertTriangle, Shield, FileText, BookmarkPlus } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface AlertDetail {
   id: string;
@@ -118,6 +119,9 @@ const AlertDetailPage: React.FC = () => {
   const { toast } = useToast();
   const [alertDetail, setAlertDetail] = useState<AlertDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("details");
+  const [isAddedToWatchlist, setIsAddedToWatchlist] = useState(false);
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
 
   useEffect(() => {
     // In a real app, this would be an API call
@@ -151,6 +155,30 @@ const AlertDetailPage: React.FC = () => {
 
     fetchAlertDetail();
   }, [alertId, navigate, toast]);
+
+  const handleGenerateReport = () => {
+    setIsGeneratingReport(true);
+    // Simulate report generation
+    setTimeout(() => {
+      toast({
+        title: "Report Generated",
+        description: "Security analysis report has been generated and downloaded.",
+      });
+      setIsGeneratingReport(false);
+    }, 1500);
+  };
+
+  const handleAddToWatchlist = () => {
+    setIsAddedToWatchlist(true);
+    toast({
+      title: "Added to Watchlist",
+      description: "Alert has been added to your security watchlist.",
+    });
+  };
+
+  const handleViewAllAlerts = () => {
+    navigate("/alerts");
+  };
 
   if (loading) {
     return (
@@ -196,6 +224,7 @@ const AlertDetailPage: React.FC = () => {
               <AlertTriangle className="h-16 w-16 text-muted-foreground mb-4" />
               <h2 className="text-xl font-semibold mb-2">Alert Not Found</h2>
               <p className="text-muted-foreground">The alert you're looking for doesn't exist or has been removed.</p>
+              <Button className="mt-4" onClick={() => navigate("/alerts")}>View All Alerts</Button>
             </div>
           </CardContent>
         </Card>
@@ -236,72 +265,132 @@ const AlertDetailPage: React.FC = () => {
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div>
-            <h3 className="font-medium mb-2">Description</h3>
-            <p>{alertDetail.description}</p>
-          </div>
-          
-          {alertDetail.technicalDetails && (
-            <div>
-              <h3 className="font-medium mb-2">Technical Details</h3>
-              <Card className="bg-muted/30 border-muted">
-                <CardContent className="py-4">
-                  <p className="text-sm font-mono">{alertDetail.technicalDetails}</p>
-                </CardContent>
-              </Card>
-            </div>
-          )}
-          
-          {alertDetail.affectedAddresses && (
-            <div>
-              <h3 className="font-medium mb-2">Affected Addresses</h3>
-              <div className="space-y-2">
-                {alertDetail.affectedAddresses.map((address, index) => (
-                  <div key={index} className="flex items-center p-2 bg-muted/30 rounded-md font-mono text-sm">
-                    {address}
-                  </div>
-                ))}
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="details">Details</TabsTrigger>
+              <TabsTrigger value="technical">Technical</TabsTrigger>
+              <TabsTrigger value="actions">Actions</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="details" className="space-y-4 pt-4">
+              <div>
+                <h3 className="font-medium mb-2">Description</h3>
+                <p>{alertDetail.description}</p>
               </div>
-            </div>
-          )}
-          
-          {alertDetail.recommendedActions && (
-            <div>
-              <h3 className="font-medium mb-2">Recommended Actions</h3>
-              <ul className="list-disc list-inside space-y-1">
-                {alertDetail.recommendedActions.map((action, index) => (
-                  <li key={index}>{action}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-          
-          {alertDetail.relatedIncidents && (
-            <div>
-              <h3 className="font-medium mb-2">Related Incidents</h3>
-              <div className="space-y-2">
-                {alertDetail.relatedIncidents.map((incident, index) => (
-                  <div key={index} className="flex justify-between items-center p-3 bg-muted/30 rounded-md">
-                    <div>
-                      <p className="font-medium">{incident.title}</p>
-                      <p className="text-sm text-muted-foreground">{incident.date}</p>
-                    </div>
-                    <Button variant="ghost" size="sm">View</Button>
+              
+              {alertDetail.affectedAddresses && (
+                <div>
+                  <h3 className="font-medium mb-2">Affected Addresses</h3>
+                  <div className="space-y-2">
+                    {alertDetail.affectedAddresses.map((address, index) => (
+                      <div key={index} className="flex items-center p-2 bg-muted/30 rounded-md font-mono text-sm overflow-auto">
+                        {address}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
+                </div>
+              )}
+              
+              {alertDetail.relatedIncidents && (
+                <div>
+                  <h3 className="font-medium mb-2">Related Incidents</h3>
+                  <div className="space-y-2">
+                    {alertDetail.relatedIncidents.map((incident, index) => (
+                      <div key={index} className="flex justify-between items-center p-3 bg-muted/30 rounded-md">
+                        <div>
+                          <p className="font-medium">{incident.title}</p>
+                          <p className="text-sm text-muted-foreground">{incident.date}</p>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => navigate(`/alerts/${incident.id}`)}
+                        >
+                          View
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="technical" className="pt-4">
+              {alertDetail.technicalDetails && (
+                <div>
+                  <h3 className="font-medium mb-2">Technical Details</h3>
+                  <Card className="bg-muted/30 border-muted">
+                    <CardContent className="py-4">
+                      <p className="text-sm font-mono">{alertDetail.technicalDetails}</p>
+                    </CardContent>
+                  </Card>
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="actions" className="pt-4">
+              {alertDetail.recommendedActions && (
+                <div>
+                  <h3 className="font-medium mb-2">Recommended Actions</h3>
+                  <ul className="list-disc list-inside space-y-1">
+                    {alertDetail.recommendedActions.map((action, index) => (
+                      <li key={index}>{action}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
       
-      <div className="flex justify-between">
-        <Button variant="outline" className="gap-2">
-          <Shield className="h-4 w-4" />
-          Add to Watchlist
+      <div className="flex flex-col sm:flex-row justify-between gap-4">
+        <Button 
+          variant="outline" 
+          className="gap-2" 
+          onClick={handleAddToWatchlist}
+          disabled={isAddedToWatchlist}
+        >
+          {isAddedToWatchlist ? (
+            <>
+              <Check className="h-4 w-4" />
+              Added to Watchlist
+            </>
+          ) : (
+            <>
+              <BookmarkPlus className="h-4 w-4" />
+              Add to Watchlist
+            </>
+          )}
         </Button>
         
-        <Button>Generate Report</Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            className="gap-2"
+            onClick={handleViewAllAlerts}
+          >
+            View All Alerts
+          </Button>
+          
+          <Button 
+            className="gap-2" 
+            onClick={handleGenerateReport}
+            disabled={isGeneratingReport}
+          >
+            {isGeneratingReport ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <FileText className="h-4 w-4" />
+                Generate Report
+              </>
+            )}
+          </Button>
+        </div>
       </div>
     </DashboardLayout>
   );
