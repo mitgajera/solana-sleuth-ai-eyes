@@ -71,7 +71,6 @@ const AppSidebar: React.FC = () => {
                 <SidebarMenuItem>
                   <SidebarMenuButton className="w-full" asChild isActive={isActive("/")} tooltip="Dashboard">
                     <Link to="/">
-                      <Eye className="h-5 w-5 mr-1 text-cyber-primary" />
                       <Home className="h-5 w-5 mr-3" />
                       <span>Dashboard</span>
                     </Link>
@@ -80,7 +79,6 @@ const AppSidebar: React.FC = () => {
                 <SidebarMenuItem>
                   <SidebarMenuButton className="w-full" asChild isActive={isActive("/activity")} tooltip="Activity">
                     <Link to="/activity">
-                      <Eye className="h-5 w-5 mr-1 text-cyber-primary" />
                       <Activity className="h-5 w-5 mr-3" />
                       <span>Activity</span>
                     </Link>
@@ -89,7 +87,6 @@ const AppSidebar: React.FC = () => {
                 <SidebarMenuItem>
                   <SidebarMenuButton className="w-full" asChild isActive={isActive("/metrics")} tooltip="Metrics">
                     <Link to="/metrics">
-                      <Eye className="h-5 w-5 mr-1 text-cyber-primary" />
                       <BarChart2 className="h-5 w-5 mr-3" />
                       <span>Metrics</span>
                     </Link>
@@ -98,7 +95,6 @@ const AppSidebar: React.FC = () => {
                 <SidebarMenuItem>
                   <SidebarMenuButton className="w-full" asChild isActive={isActive("/data-sources")} tooltip="Data Sources">
                     <Link to="/data-sources">
-                      <Eye className="h-5 w-5 mr-1 text-cyber-primary" />
                       <Database className="h-5 w-5 mr-3" />
                       <span>Data Sources</span>
                     </Link>
@@ -115,7 +111,6 @@ const AppSidebar: React.FC = () => {
                 <SidebarMenuItem>
                   <SidebarMenuButton className="w-full" asChild isActive={isActive("/alerts")} tooltip="Alerts">
                     <Link to="/alerts">
-                      <Eye className="h-5 w-5 mr-1 text-cyber-primary" />
                       <AlertTriangle className="h-5 w-5 mr-3 text-cyber-warning" />
                       <span>Alerts</span>
                     </Link>
@@ -124,7 +119,6 @@ const AppSidebar: React.FC = () => {
                 <SidebarMenuItem>
                   <SidebarMenuButton className="w-full" asChild isActive={isActive("/threats")} tooltip="Threats">
                     <Link to="/threats">
-                      <Eye className="h-5 w-5 mr-1 text-cyber-primary" />
                       <Shield className="h-5 w-5 mr-3 text-cyber-primary" />
                       <span>Threats</span>
                     </Link>
@@ -133,7 +127,6 @@ const AppSidebar: React.FC = () => {
                 <SidebarMenuItem>
                   <SidebarMenuButton className="w-full" asChild isActive={isActive("/ai-analysis")} tooltip="AI Analysis">
                     <Link to="/ai-analysis">
-                      <Eye className="h-5 w-5 mr-1 text-cyber-primary" />
                       <Zap className="h-5 w-5 mr-3 text-cyber-accent" />
                       <span>AI Analysis</span>
                     </Link>
