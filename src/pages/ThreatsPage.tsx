@@ -1,4 +1,6 @@
+
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,6 +26,7 @@ interface ThreatItem {
 }
 
 const ThreatsPage: React.FC = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   
@@ -101,7 +104,7 @@ const ThreatsPage: React.FC = () => {
       severity: 'high',
       discoveredAt: '1 week ago',
       affectedUsers: 0,
-      description: "Flash loan attack attempted against a major protocol's governance system to pass malicious proposals.",
+      description: 'Flash loan attack attempted against a major protocol\'s governance system to pass malicious proposals.',
       mitigation: 'Governance timelock added. Flash loan protection implemented. Security audit completed.',
       targets: ['DAO governance', 'DeFi protocols'],
       mitigationProgress: 100
@@ -165,6 +168,36 @@ const ThreatsPage: React.FC = () => {
       
       return true;
     });
+  };
+
+  const viewDetailedAdvisory = () => {
+    navigate('/threats/phishing-advisory');
+    toast({
+      title: "Advisory opened",
+      description: "Viewing detailed advisory on the active phishing campaign.",
+    });
+  };
+
+  const viewThreatAnalysis = (threatId: string) => {
+    navigate(`/threats/${threatId}`);
+  };
+
+  const openExternalLink = (type: string) => {
+    const urls: Record<string, string> = {
+      'solana': 'https://docs.solana.com/security',
+      'messari': 'https://messari.io/research',
+      'map': 'https://messari.io/research/on-chain-activity'
+    };
+    
+    if (urls[type]) {
+      window.open(urls[type], '_blank');
+    } else {
+      toast({
+        title: "Link not available",
+        description: "External link not configured.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -241,7 +274,12 @@ const ThreatsPage: React.FC = () => {
                 New wave of phishing emails targeting Solana users with fake update notifications and airdrops.
                 Always verify the sources of communications and never share your seed phrase.
               </p>
-              <Button variant="outline" size="sm" className="border-red-500/30 hover:bg-red-500/20">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="border-red-500/30 hover:bg-red-500/20"
+                onClick={viewDetailedAdvisory}
+              >
                 <Eye className="mr-2 h-4 w-4" />
                 View Detailed Advisory
               </Button>
@@ -390,7 +428,11 @@ const ThreatsPage: React.FC = () => {
                 </CardContent>
                 <CardFooter className="flex justify-between">
                   <p className="text-sm text-muted-foreground truncate max-w-[70%]">{threat.mitigation}</p>
-                  <Button size="sm" variant="outline">
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => viewThreatAnalysis(threat.id)}
+                  >
                     Full Analysis <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </CardFooter>
@@ -426,7 +468,11 @@ const ThreatsPage: React.FC = () => {
                 <Shield className="h-5 w-5 text-cyan-500 mr-3" />
                 <span>Solana Foundation Security Advisories</span>
               </div>
-              <Button variant="ghost" size="sm">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => openExternalLink('solana')}
+              >
                 <ExternalLink className="h-4 w-4" />
               </Button>
             </div>
@@ -435,7 +481,11 @@ const ThreatsPage: React.FC = () => {
                 <AlertCircle className="h-5 w-5 text-cyan-500 mr-3" />
                 <span>Messari Security Research</span>
               </div>
-              <Button variant="ghost" size="sm">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => openExternalLink('messari')}
+              >
                 <ExternalLink className="h-4 w-4" />
               </Button>
             </div>
@@ -444,7 +494,11 @@ const ThreatsPage: React.FC = () => {
                 <Map className="h-5 w-5 text-cyan-500 mr-3" />
                 <span>Global Threat Map</span>
               </div>
-              <Button variant="ghost" size="sm">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => openExternalLink('map')}
+              >
                 <ExternalLink className="h-4 w-4" />
               </Button>
             </div>

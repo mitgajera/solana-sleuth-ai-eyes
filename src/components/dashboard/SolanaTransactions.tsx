@@ -23,6 +23,7 @@ interface SolanaTransactionsProps {
 const SolanaTransactions: React.FC<SolanaTransactionsProps> = ({ className }) => {
   const [transactions, setTransactions] = useState<TransactionItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [lastUpdate, setLastUpdate] = useState(Date.now());
   const { toast } = useToast();
 
   const generateMockTransactions = (marketData: any) => {
@@ -40,6 +41,9 @@ const SolanaTransactions: React.FC<SolanaTransactionsProps> = ({ className }) =>
     const price = marketData?.price_usd || 0;
     const volume = marketData?.volume_last_24_hours || 0;
     
+    // Current timestamp to create realistic times
+    const now = Date.now();
+    
     // Generate transactions with dynamic values based on real price data
     return Array.from({ length: 10 }, (_, i) => {
       const randomAddrFrom = randomAddresses[Math.floor(Math.random() * randomAddresses.length)];
@@ -47,60 +51,67 @@ const SolanaTransactions: React.FC<SolanaTransactionsProps> = ({ className }) =>
       const transactionType = transactionTypes[Math.floor(Math.random() * transactionTypes.length)];
       const amount = amounts[Math.floor(Math.random() * amounts.length)];
       const success = Math.random() > 0.2;
+      const minutesAgo = Math.floor(Math.random() * 59) + 1;
       
       return {
-        id: `tx-${Date.now()}-${i}`,
+        id: `tx-${now}-${i}`,
         type: transactionType,
         description: `${transactionType} from ${randomAddrFrom.slice(0, 4)}...${randomAddrFrom.slice(-4)} to ${randomAddrTo.slice(0, 4)}...${randomAddrTo.slice(-4)}`,
-        timestamp: `${Math.floor(Math.random() * 59) + 1} min ago`,
+        timestamp: `${minutesAgo} min ago`,
         value: amount,
         success,
       };
     });
   };
 
-  useEffect(() => {
-    const fetchSolanaData = async () => {
-      try {
-        setIsLoading(true);
-        const data = await messariService.getSolanaTransactions();
-        const transformedData = messariService.transformSolanaData(data);
-        
-        if (transformedData.marketData) {
-          // Use real market data to generate realistic mock transactions
-          const txs = generateMockTransactions(transformedData.marketData);
-          setTransactions(txs);
-        } else {
-          toast({
-            title: "Data Issue",
-            description: "Could not fetch transaction data. Using mock data instead.",
-            variant: "destructive",
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching Solana transactions:", error);
+  const fetchTransactions = async () => {
+    try {
+      setIsLoading(true);
+      const data = await messariService.getSolanaTransactions();
+      const transformedData = messariService.transformSolanaData(data);
+      
+      if (transformedData.marketData) {
+        // Use real market data to generate realistic mock transactions
+        const txs = generateMockTransactions(transformedData.marketData);
+        setTransactions(txs);
+        setLastUpdate(Date.now());
+      } else {
+        console.error("No market data available for transaction generation");
         toast({
-          title: "Error",
-          description: "Could not fetch transaction data. Please check your API key configuration.",
+          title: "Data Issue",
+          description: "Could not fetch transaction data. Using mock data instead.",
           variant: "destructive",
         });
-      } finally {
-        setIsLoading(false);
       }
-    };
+    } catch (error) {
+      console.error("Error fetching Solana transactions:", error);
+      toast({
+        title: "Error",
+        description: "Could not fetch transaction data. Please check your API key configuration.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    fetchSolanaData();
+  useEffect(() => {
+    // Initial fetch
+    fetchTransactions();
     
-    // Refresh every 2 minutes
-    const interval = setInterval(fetchSolanaData, 2 * 60 * 1000);
+    // Set up interval to refresh every minute (60 seconds * 1000 ms)
+    const interval = setInterval(fetchTransactions, 60 * 1000);
     
     return () => clearInterval(interval);
   }, [toast]);
 
   return (
     <Card className={cn("cyber-card h-full border-opacity-20", className)}>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg font-medium">Recent Transaction Activity</CardTitle>
+        <div className="text-xs text-muted-foreground">
+          Updated {Math.floor((Date.now() - lastUpdate) / 1000)}s ago
+        </div>
       </CardHeader>
       <CardContent>
         {isLoading ? (

@@ -1,5 +1,6 @@
 
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ type AlertSeverity = 'critical' | 'high' | 'medium' | 'low';
 
 type Alert = {
   id: string;
+  routeId: string;
   title: string;
   description: string;
   severity: AlertSeverity;
@@ -22,11 +24,13 @@ type Alert = {
 };
 
 const AlertsPage: React.FC = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [alerts, setAlerts] = useState<Alert[]>([
     {
       id: 'alert-1',
+      routeId: 'unusual-transaction',
       title: 'Unusual transaction pattern detected',
       description: 'A series of high-value transactions from flagged address 0x1a2b...3c4d has been detected.',
       severity: 'high',
@@ -36,6 +40,7 @@ const AlertsPage: React.FC = () => {
     },
     {
       id: 'alert-2',
+      routeId: 'new-vulnerability',
       title: 'New security vulnerability disclosed',
       description: 'A critical vulnerability (CVE-2025-1234) has been disclosed affecting Solana DeFi protocols.',
       severity: 'critical',
@@ -45,6 +50,7 @@ const AlertsPage: React.FC = () => {
     },
     {
       id: 'alert-3',
+      routeId: 'whale-movement',
       title: 'Whale wallet movement detected',
       description: 'A wallet containing over 500,000 SOL has started moving funds to exchanges.',
       severity: 'medium',
@@ -54,6 +60,7 @@ const AlertsPage: React.FC = () => {
     },
     {
       id: 'alert-4',
+      routeId: 'contract-anomaly',
       title: 'Smart contract anomaly identified',
       description: 'Unusual call pattern detected in the contract at address 5TUfcg...k9jF.',
       severity: 'medium',
@@ -63,6 +70,7 @@ const AlertsPage: React.FC = () => {
     },
     {
       id: 'alert-5',
+      routeId: 'front-running',
       title: 'Potential front-running attempt detected',
       description: 'Multiple transactions attempting to front-run DEX trades have been identified.',
       severity: 'high',
@@ -72,6 +80,7 @@ const AlertsPage: React.FC = () => {
     },
     {
       id: 'alert-6',
+      routeId: 'governance-attack',
       title: 'Governance proposal attacked',
       description: 'A flash loan attack attempt against governance proposal #235 was detected and prevented.',
       severity: 'critical',
@@ -81,6 +90,7 @@ const AlertsPage: React.FC = () => {
     },
     {
       id: 'alert-7',
+      routeId: 'api-latency',
       title: 'API endpoint latency increase',
       description: 'The main RPC endpoint is experiencing higher than normal latency (350ms vs 120ms avg).',
       severity: 'low',
@@ -112,6 +122,10 @@ const AlertsPage: React.FC = () => {
       title: "All alerts marked as read",
       description: "All alerts have been marked as read.",
     });
+  };
+
+  const viewAlertDetails = (alertRouteId: string) => {
+    navigate(`/alerts/${alertRouteId}`);
   };
 
   const filterAlerts = (alerts: Alert[], tab: string) => {
@@ -264,6 +278,7 @@ const AlertsPage: React.FC = () => {
                     <Button 
                       variant="outline" 
                       size="sm"
+                      onClick={() => viewAlertDetails(alert.routeId)}
                     >
                       <Shield className="mr-2 h-3 w-3" />
                       View Details

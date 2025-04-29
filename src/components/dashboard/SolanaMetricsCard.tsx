@@ -14,31 +14,34 @@ interface SolanaMetricsCardProps {
 const SolanaMetricsCard: React.FC<SolanaMetricsCardProps> = ({ className }) => {
   const [solanaData, setSolanaData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [lastUpdate, setLastUpdate] = useState(Date.now());
   const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchSolanaData = async () => {
-      try {
-        setIsLoading(true);
-        const data = await messariService.getSolanaAssetData();
-        const transformedData = messariService.transformSolanaData(data);
-        setSolanaData(transformedData);
-      } catch (error) {
-        console.error("Error fetching Solana data:", error);
-        toast({
-          title: "Error",
-          description: "Could not fetch Solana metrics. Please check your API key configuration.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const fetchSolanaData = async () => {
+    try {
+      setIsLoading(true);
+      const data = await messariService.getSolanaAssetData();
+      const transformedData = messariService.transformSolanaData(data);
+      setSolanaData(transformedData);
+      setLastUpdate(Date.now());
+    } catch (error) {
+      console.error("Error fetching Solana data:", error);
+      toast({
+        title: "Error",
+        description: "Could not fetch Solana metrics. Please check your API key configuration.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  useEffect(() => {
+    // Initial fetch
     fetchSolanaData();
     
-    // Refresh every 5 minutes
-    const interval = setInterval(fetchSolanaData, 5 * 60 * 1000);
+    // Set up interval to refresh every minute (60 seconds * 1000 ms)
+    const interval = setInterval(fetchSolanaData, 60 * 1000);
     
     return () => clearInterval(interval);
   }, [toast]);
@@ -59,8 +62,11 @@ const SolanaMetricsCard: React.FC<SolanaMetricsCardProps> = ({ className }) => {
 
   return (
     <Card className={cn("cyber-card h-full border-opacity-20", className)}>
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg font-medium">Solana Metrics</CardTitle>
+        <div className="text-xs text-muted-foreground">
+          Updated {Math.floor((Date.now() - lastUpdate) / 1000)}s ago
+        </div>
       </CardHeader>
       <CardContent>
         {isLoading ? (
