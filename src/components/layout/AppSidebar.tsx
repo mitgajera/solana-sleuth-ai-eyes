@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { 
@@ -6,11 +5,12 @@ import {
   AlertTriangle, 
   BarChart2, 
   Database, 
-  Eye, 
   Home, 
   Shield, 
   Zap,
-  Menu 
+  Menu,
+  PanelLeft, // Import PanelLeft icon for sidebar toggle
+  Eye
 } from "lucide-react";
 import {
   Sidebar,
@@ -43,11 +43,11 @@ const AppSidebar: React.FC = () => {
         <Button
           variant="outline"
           size="icon"
-          className="fixed left-4 top-4 z-50 md:hidden" 
+          className="fixed left-4 top-4 z-50" 
           onClick={toggleSidebar}
         >
-          <Menu className="h-4 w-4" />
-          <span className="sr-only">Toggle Menu</span>
+          <PanelLeft className="h-4 w-4" />
+          <span className="sr-only">Open Sidebar</span>
         </Button>
       )}
 
