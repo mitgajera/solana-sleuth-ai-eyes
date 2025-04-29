@@ -3,7 +3,6 @@ import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle, Home, ArrowLeft } from "lucide-react";
 
 const NotFound = () => {
   const location = useLocation();
@@ -29,10 +28,6 @@ const NotFound = () => {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-background">
       <div className="max-w-md text-center space-y-6 p-8 rounded-lg border bg-card shadow-lg">
-        <div className="mx-auto w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center">
-          <AlertTriangle size={32} className="text-red-500" />
-        </div>
-        
         <h1 className="text-4xl font-bold tracking-tight cyber-text-glow">404</h1>
         <h2 className="text-2xl font-semibold">Page Not Found</h2>
         
@@ -47,14 +42,12 @@ const NotFound = () => {
             className="gap-2" 
             onClick={goBack}
           >
-            <ArrowLeft className="h-4 w-4" />
             Go Back
           </Button>
           <Button 
             className="gap-2" 
             onClick={goHome}
           >
-            <Home className="h-4 w-4" />
             Return to Home
           </Button>
         </div>

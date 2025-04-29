@@ -1,39 +1,24 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import DashboardLayout from "@/components/layout/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Calendar, AlertTriangle, Shield, FileText, BookmarkPlus } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
+import { CheckCircle2, Loader, Eye, ShieldAlert, AlertTriangle, Clock, Calendar } from "lucide-react";
+import { mockAlerts } from "@/services/mockData";
 
-interface AlertDetail {
-  id: string;
-  title: string;
-  description: string;
-  severity: 'critical' | 'high' | 'medium' | 'low';
-  status: string;
-  timestamp: string;
-  source: string;
-  affectedAddresses?: string[];
-  technicalDetails?: string;
-  recommendedActions?: string[];
-  relatedIncidents?: {
-    id: string;
-    title: string;
-    date: string;
-  }[];
-}
-
-const getSeverityStyles = (severity: string) => {
-  switch(severity) {
+// Alert severity colors
+const getSeverityColor = (severity: string) => {
+  switch (severity.toLowerCase()) {
     case 'critical':
       return 'bg-red-500/20 text-red-500 border-red-500/30';
     case 'high':
-      return 'bg-amber-500/20 text-amber-500 border-amber-500/30';
+      return 'bg-orange-500/20 text-orange-500 border-orange-500/30';
     case 'medium':
       return 'bg-yellow-500/20 text-yellow-500 border-yellow-500/30';
     case 'low':
@@ -43,100 +28,33 @@ const getSeverityStyles = (severity: string) => {
   }
 };
 
-// Mock data - would be replaced with real API call
-const mockAlertsData: Record<string, AlertDetail> = {
-  "unusual-transaction": {
-    id: "unusual-transaction",
-    title: "Unusual transaction pattern detected",
-    description: "A series of high-value transactions from flagged address 0x1a2b...3c4d has been detected.",
-    severity: "high",
-    status: "Active",
-    timestamp: "10 minutes ago",
-    source: "Transaction Monitor",
-    affectedAddresses: [
-      "0x1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s",
-      "0x9s8r7q6p5o4n3m2l1k0j9i8h7g6f5e4d3c2b1a"
-    ],
-    technicalDetails: "Multiple transactions exceeding 10,000 SOL were executed within a 5-minute window from addresses previously associated with suspicious activity. The pattern matches known strategies for token price manipulation and potential rug pulls.",
-    recommendedActions: [
-      "Monitor the flagged address for further activity",
-      "Consider adding the address to your watchlist",
-      "Exercise caution when interacting with projects associated with this address"
-    ],
-    relatedIncidents: [
-      {
-        id: "tx-pattern-1",
-        title: "Similar pattern detected last month",
-        date: "March 24, 2025"
-      }
-    ]
-  },
-  "new-vulnerability": {
-    id: "new-vulnerability",
-    title: "New security vulnerability disclosed",
-    description: "A critical vulnerability (CVE-2025-1234) has been disclosed affecting Solana DeFi protocols.",
-    severity: "critical",
-    status: "Active",
-    timestamp: "1 hour ago",
-    source: "Security Feed",
-    technicalDetails: "CVE-2025-1234 affects smart contract implementations using a specific arithmetic calculation pattern found in several major DeFi protocols. The vulnerability allows an attacker to potentially drain funds by exploiting an overflow condition during collateral calculations.",
-    recommendedActions: [
-      "Immediately update affected protocols to the latest version",
-      "Avoid using vulnerable protocols until patches are confirmed",
-      "Monitor your positions in affected protocols"
-    ],
-    relatedIncidents: [
-      {
-        id: "related-vuln-1",
-        title: "Previous arithmetic vulnerability (CVE-2024-5678)",
-        date: "November 12, 2024"
-      }
-    ]
-  },
-  "whale-movement": {
-    id: "whale-movement",
-    title: "Whale wallet movement detected",
-    description: "A wallet containing over 500,000 SOL has started moving funds to exchanges.",
-    severity: "medium",
-    status: "Monitoring",
-    timestamp: "3 hours ago",
-    source: "Whale Watch",
-    affectedAddresses: [
-      "Sol1n1SqbvP5csyn2fzkZTFdKCFpkDxr7zdCuEKoHTk"
-    ],
-    technicalDetails: "Wallet containing approximately 528,420 SOL (valued at $78.9M) has moved 125,000 SOL to Binance and 75,000 SOL to OKX within the past 3 hours. This represents a significant portion of their holdings and may signal potential selling pressure.",
-    recommendedActions: [
-      "Monitor SOL price action over the next 24-48 hours",
-      "Be aware of increased volatility potential",
-      "Consider hedging strategies if you have significant SOL exposure"
-    ]
-  }
-};
-
 const AlertDetailPage: React.FC = () => {
   const { alertId } = useParams<{ alertId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [alertDetail, setAlertDetail] = useState<AlertDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("details");
-  const [isAddedToWatchlist, setIsAddedToWatchlist] = useState(false);
+  
+  const [alert, setAlert] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
-
+  const [isAddingToWatchlist, setIsAddingToWatchlist] = useState(false);
+  const [isInWatchlist, setIsInWatchlist] = useState(false);
+  
   useEffect(() => {
-    // In a real app, this would be an API call
-    const fetchAlertDetail = async () => {
+    const fetchAlert = async () => {
       try {
-        setLoading(true);
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 500));
+        setIsLoading(true);
+        // In a real app, we would fetch from an API
+        await new Promise(resolve => setTimeout(resolve, 600)); // Simulate API call
         
-        if (alertId && mockAlertsData[alertId]) {
-          setAlertDetail(mockAlertsData[alertId]);
+        const foundAlert = mockAlerts.find(a => a.id === alertId);
+        
+        if (foundAlert) {
+          setAlert(foundAlert);
+          setIsInWatchlist(Math.random() > 0.5); // Randomly set watchlist status for demo
         } else {
           toast({
             title: "Alert not found",
-            description: "The requested alert details could not be found.",
+            description: `No alert with ID ${alertId} exists.`,
             variant: "destructive",
           });
           navigate("/alerts");
@@ -144,253 +62,348 @@ const AlertDetailPage: React.FC = () => {
       } catch (error) {
         console.error("Error fetching alert details:", error);
         toast({
-          title: "Error",
-          description: "Failed to load alert details.",
+          title: "Error loading alert",
+          description: "Could not load alert details. Please try again.",
           variant: "destructive",
         });
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
-
-    fetchAlertDetail();
+    
+    if (alertId) {
+      fetchAlert();
+    }
   }, [alertId, navigate, toast]);
-
-  const handleGenerateReport = () => {
-    setIsGeneratingReport(true);
-    // Simulate report generation
-    setTimeout(() => {
-      toast({
-        title: "Report Generated",
-        description: "Security analysis report has been generated and downloaded.",
-      });
-      setIsGeneratingReport(false);
-    }, 1500);
-  };
-
-  const handleAddToWatchlist = () => {
-    setIsAddedToWatchlist(true);
-    toast({
-      title: "Added to Watchlist",
-      description: "Alert has been added to your security watchlist.",
-    });
-  };
-
-  const handleViewAllAlerts = () => {
+  
+  const handleBack = () => {
     navigate("/alerts");
   };
-
-  if (loading) {
+  
+  const handleGenerateReport = async () => {
+    try {
+      setIsGeneratingReport(true);
+      await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate processing
+      
+      toast({
+        title: "Report Generated",
+        description: "The detailed report has been generated and saved.",
+      });
+      
+      // In a real app, we would handle the report generation and download
+    } catch (error) {
+      console.error("Error generating report:", error);
+      toast({
+        title: "Report Generation Failed",
+        description: "Could not generate report. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingReport(false);
+    }
+  };
+  
+  const handleAddToWatchlist = async () => {
+    try {
+      setIsAddingToWatchlist(true);
+      await new Promise(resolve => setTimeout(resolve, 800)); // Simulate processing
+      
+      setIsInWatchlist(!isInWatchlist);
+      
+      toast({
+        title: isInWatchlist ? "Removed from Watchlist" : "Added to Watchlist",
+        description: isInWatchlist 
+          ? "This alert has been removed from your watchlist." 
+          : "This alert has been added to your watchlist.",
+      });
+    } catch (error) {
+      console.error("Error updating watchlist:", error);
+      toast({
+        title: "Action Failed",
+        description: "Could not update watchlist. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAddingToWatchlist(false);
+    }
+  };
+  
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+  
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.round(diffMs / 60000);
+    const diffHours = Math.round(diffMs / 3600000);
+    const diffDays = Math.round(diffMs / 86400000);
+    
+    if (diffMins < 60) {
+      return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
+    } else if (diffHours < 24) {
+      return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+    } else {
+      return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+    }
+  };
+  
+  if (isLoading) {
     return (
       <DashboardLayout>
-        <div className="flex justify-between items-center mb-6">
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate(-1)}
-            className="gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Alerts
-          </Button>
-        </div>
-        <Card>
-          <CardContent className="py-12">
-            <div className="flex flex-col items-center justify-center">
-              <div className="h-8 w-8 rounded-full border-4 border-t-primary animate-spin mb-4" />
-              <p className="text-muted-foreground">Loading alert details...</p>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <Skeleton className="h-8 w-64 mb-2" />
+              <Skeleton className="h-4 w-32" />
             </div>
-          </CardContent>
-        </Card>
+            <Skeleton className="h-10 w-20" />
+          </div>
+          
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-48 mb-3" />
+              <Skeleton className="h-4 w-72" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Skeleton className="h-32 w-full" />
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-20 w-full" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-32" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-48 w-full" />
+            </CardContent>
+          </Card>
+        </div>
       </DashboardLayout>
     );
   }
-
-  if (!alertDetail) {
+  
+  if (!alert) {
     return (
       <DashboardLayout>
-        <div className="flex justify-between items-center mb-6">
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate(-1)}
-            className="gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Alerts
-          </Button>
+        <div className="flex flex-col items-center justify-center h-[60vh]">
+          <AlertTriangle className="h-16 w-16 text-amber-500 mb-4" />
+          <h2 className="text-2xl font-bold mb-2">Alert Not Found</h2>
+          <p className="text-muted-foreground mb-6">
+            The alert you're looking for doesn't exist or has been removed.
+          </p>
+          <Button onClick={handleBack}>Go Back to Alerts</Button>
         </div>
-        <Card>
-          <CardContent className="py-12">
-            <div className="flex flex-col items-center justify-center">
-              <AlertTriangle className="h-16 w-16 text-muted-foreground mb-4" />
-              <h2 className="text-xl font-semibold mb-2">Alert Not Found</h2>
-              <p className="text-muted-foreground">The alert you're looking for doesn't exist or has been removed.</p>
-              <Button className="mt-4" onClick={() => navigate("/alerts")}>View All Alerts</Button>
-            </div>
-          </CardContent>
-        </Card>
       </DashboardLayout>
     );
   }
-
+  
   return (
     <DashboardLayout>
-      <div className="flex justify-between items-center mb-6">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate(-1)}
-          className="gap-2"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Alerts
-        </Button>
-        
-        <Badge className={getSeverityStyles(alertDetail.severity)}>
-          {alertDetail.severity.charAt(0).toUpperCase() + alertDetail.severity.slice(1)}
-        </Badge>
-      </div>
-      
-      <Card className="mb-6">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-2xl font-bold">
-              {alertDetail.title}
-            </CardTitle>
-            <Badge variant="outline">
-              {alertDetail.status}
-            </Badge>
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold cyber-text-glow font-mono tracking-tight mb-1">
+              Alert Details
+            </h1>
+            <p className="text-muted-foreground">
+              Detailed information about the selected security alert
+            </p>
           </div>
-          <div className="flex items-center text-sm text-muted-foreground">
-            <Calendar className="h-4 w-4 mr-2" />
-            {alertDetail.timestamp} • {alertDetail.source}
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="details">Details</TabsTrigger>
-              <TabsTrigger value="technical">Technical</TabsTrigger>
-              <TabsTrigger value="actions">Actions</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="details" className="space-y-4 pt-4">
-              <div>
-                <h3 className="font-medium mb-2">Description</h3>
-                <p>{alertDetail.description}</p>
-              </div>
-              
-              {alertDetail.affectedAddresses && (
-                <div>
-                  <h3 className="font-medium mb-2">Affected Addresses</h3>
-                  <div className="space-y-2">
-                    {alertDetail.affectedAddresses.map((address, index) => (
-                      <div key={index} className="flex items-center p-2 bg-muted/30 rounded-md font-mono text-sm overflow-auto">
-                        {address}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              
-              {alertDetail.relatedIncidents && (
-                <div>
-                  <h3 className="font-medium mb-2">Related Incidents</h3>
-                  <div className="space-y-2">
-                    {alertDetail.relatedIncidents.map((incident, index) => (
-                      <div key={index} className="flex justify-between items-center p-3 bg-muted/30 rounded-md">
-                        <div>
-                          <p className="font-medium">{incident.title}</p>
-                          <p className="text-sm text-muted-foreground">{incident.date}</p>
-                        </div>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => navigate(`/alerts/${incident.id}`)}
-                        >
-                          View
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </TabsContent>
-            
-            <TabsContent value="technical" className="pt-4">
-              {alertDetail.technicalDetails && (
-                <div>
-                  <h3 className="font-medium mb-2">Technical Details</h3>
-                  <Card className="bg-muted/30 border-muted">
-                    <CardContent className="py-4">
-                      <p className="text-sm font-mono">{alertDetail.technicalDetails}</p>
-                    </CardContent>
-                  </Card>
-                </div>
-              )}
-            </TabsContent>
-            
-            <TabsContent value="actions" className="pt-4">
-              {alertDetail.recommendedActions && (
-                <div>
-                  <h3 className="font-medium mb-2">Recommended Actions</h3>
-                  <ul className="list-disc list-inside space-y-1">
-                    {alertDetail.recommendedActions.map((action, index) => (
-                      <li key={index}>{action}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
-      
-      <div className="flex flex-col sm:flex-row justify-between gap-4">
-        <Button 
-          variant="outline" 
-          className="gap-2" 
-          onClick={handleAddToWatchlist}
-          disabled={isAddedToWatchlist}
-        >
-          {isAddedToWatchlist ? (
-            <>
-              <Check className="h-4 w-4" />
-              Added to Watchlist
-            </>
-          ) : (
-            <>
-              <BookmarkPlus className="h-4 w-4" />
-              Add to Watchlist
-            </>
-          )}
-        </Button>
-        
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            className="gap-2"
-            onClick={handleViewAllAlerts}
-          >
-            View All Alerts
-          </Button>
           
-          <Button 
-            className="gap-2" 
-            onClick={handleGenerateReport}
-            disabled={isGeneratingReport}
-          >
-            {isGeneratingReport ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>
-                <FileText className="h-4 w-4" />
-                Generate Report
-              </>
-            )}
+          <Button variant="outline" onClick={handleBack}>
+            Back to Alerts
           </Button>
         </div>
+        
+        <Card className="cyber-card border-opacity-20">
+          <CardHeader>
+            <div className="flex items-start justify-between">
+              <div>
+                <CardTitle className="text-xl font-semibold mb-1">{alert.title}</CardTitle>
+                <CardDescription className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <span>Detected {formatTimeAgo(alert.timestamp)}</span>
+                  <span className="text-muted-foreground">•</span>
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span>{formatDate(alert.timestamp)}</span>
+                </CardDescription>
+              </div>
+              
+              <Badge className={`${getSeverityColor(alert.severity)} border px-3 py-1`}>
+                {alert.severity}
+              </Badge>
+            </div>
+          </CardHeader>
+          
+          <CardContent className="space-y-6">
+            <div className="bg-muted/30 rounded-md p-4">
+              <p className="font-medium mb-1">Alert Description</p>
+              <p className="text-sm text-muted-foreground">{alert.description}</p>
+            </div>
+            
+            <div>
+              <h3 className="text-md font-medium mb-3">Alert Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-card rounded-md border border-border/30 p-4">
+                  <p className="text-sm font-medium text-muted-foreground mb-1">Alert Type</p>
+                  <p className="font-semibold">{alert.type}</p>
+                </div>
+                <div className="bg-card rounded-md border border-border/30 p-4">
+                  <p className="text-sm font-medium text-muted-foreground mb-1">Source</p>
+                  <p className="font-semibold">{alert.source}</p>
+                </div>
+                <div className="bg-card rounded-md border border-border/30 p-4">
+                  <p className="text-sm font-medium text-muted-foreground mb-1">Status</p>
+                  <div className="flex items-center gap-1.5">
+                    {alert.status === 'Resolved' ? (
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <ShieldAlert className="h-4 w-4 text-amber-500" />
+                    )}
+                    <p className="font-semibold">{alert.status}</p>
+                  </div>
+                </div>
+                <div className="bg-card rounded-md border border-border/30 p-4">
+                  <p className="text-sm font-medium text-muted-foreground mb-1">Affected Address</p>
+                  <p className="font-mono text-sm truncate">{alert.affectedAddress}</p>
+                </div>
+              </div>
+            </div>
+            
+            <Separator />
+            
+            <div>
+              <h3 className="text-md font-medium mb-3">Technical Details</h3>
+              
+              <Tabs defaultValue="details" className="w-full">
+                <TabsList className="mb-2 bg-background">
+                  <TabsTrigger value="details">Analysis</TabsTrigger>
+                  <TabsTrigger value="transactions">Related Transactions</TabsTrigger>
+                  <TabsTrigger value="logs">Logs</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="details" className="space-y-4">
+                  <div className="bg-card/30 rounded-md border border-border/30 p-4">
+                    <p className="font-medium mb-2">Impact Analysis</p>
+                    <p className="text-sm text-muted-foreground">{alert.technicalDetails?.impact || "No impact analysis available."}</p>
+                  </div>
+                  
+                  <div className="bg-card/30 rounded-md border border-border/30 p-4">
+                    <p className="font-medium mb-2">Recommendation</p>
+                    <p className="text-sm text-muted-foreground">{alert.technicalDetails?.recommendation || "No recommendations available."}</p>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="transactions">
+                  <div className="bg-muted/30 border border-border/30 rounded-md p-4 space-y-2">
+                    {alert.relatedTransactions?.length > 0 ? (
+                      alert.relatedTransactions.map((tx: any, index: number) => (
+                        <div key={index} className="p-2 rounded-md bg-card/30 border border-border/20">
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                            <div>
+                              <p className="font-mono text-xs text-muted-foreground truncate">
+                                {tx.hash}
+                              </p>
+                              <p className="text-sm font-medium">{tx.type}</p>
+                            </div>
+                            <Badge>{tx.status}</Badge>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-center text-sm text-muted-foreground py-4">
+                        No related transactions found.
+                      </p>
+                    )}
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="logs">
+                  <div className="bg-muted/50 border border-border/30 rounded-md">
+                    <div className="font-mono text-xs p-4 max-h-[300px] overflow-y-auto">
+                      {alert.logs?.length > 0 ? (
+                        alert.logs.map((log: string, index: number) => (
+                          <div key={index} className="pb-1">
+                            <span className="text-muted-foreground mr-2">[{index}]</span>
+                            <span>{log}</span>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-center text-sm text-muted-foreground py-4">
+                          No logs available for this alert.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
+            
+            <div>
+              <h3 className="text-md font-medium mb-3">Security Analysis</h3>
+              <div className="bg-muted/30 rounded-md border border-border/30 p-4">
+                <p className="text-sm text-muted-foreground">
+                  {alert.securityAnalysis || "No security analysis available for this alert."}
+                </p>
+                
+                <div className="mt-4">
+                  <Button variant="secondary" size="sm" className="text-sm">
+                    Generate Security Analysis
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+          
+          <CardFooter className="flex flex-col sm:flex-row gap-3 pt-2 pb-6">
+            <Button 
+              onClick={handleGenerateReport} 
+              disabled={isGeneratingReport}
+              className="w-full sm:w-auto"
+            >
+              {isGeneratingReport ? (
+                <>
+                  <Loader className="h-4 w-4 mr-2 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Eye className="h-4 w-4 mr-2" />
+                  Generate Report
+                </>
+              )}
+            </Button>
+            
+            <Button 
+              variant={isInWatchlist ? "outline" : "secondary"}
+              onClick={handleAddToWatchlist}
+              disabled={isAddingToWatchlist}
+              className="w-full sm:w-auto"
+            >
+              {isAddingToWatchlist ? (
+                <Loader className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <></>
+              )}
+              {isInWatchlist ? "Remove from Watchlist" : "Add to Watchlist"}
+            </Button>
+          </CardFooter>
+        </Card>
       </div>
     </DashboardLayout>
   );
